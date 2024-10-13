@@ -715,6 +715,26 @@ const quizData = [
   }
 ];
 
+
+// Utility function to shuffle the array (Fisher-Yates Shuffle Algorithm)
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+// Shuffles the choices and adjusts the correct answer index accordingly
+function shuffleChoices(currentCard) {
+  const correctAnswer = currentCard.answer;
+  const shuffledChoices = [...currentCard.choices]; // Copy the choices array
+  shuffleArray(shuffledChoices); // Shuffle the choices
+  
+  // Update the correct answer index after shuffling
+  const newCorrectAnswerIndex = shuffledChoices.indexOf(currentCard.choices[correctAnswer]);
+  return { shuffledChoices, newCorrectAnswerIndex };
+}
+
 let currentCardIndex = 0;
 const questionElement = document.getElementById('question');
 const choicesElement = document.getElementById('choices');
@@ -747,8 +767,11 @@ function loadCard() {
     });
     choicesElement.appendChild(checkAnswerBtn);
   } else {
-    // Load choices for multiple-choice and true/false questions
-    currentCard.choices.forEach((choice, index) => {
+    // Shuffle the choices and get the new correct answer index
+    const { shuffledChoices, newCorrectAnswerIndex } = shuffleChoices(currentCard);
+
+    // Load shuffled choices for multiple-choice and true/false questions
+    shuffledChoices.forEach((choice, index) => {
       const choiceElement = document.createElement('div');
       choiceElement.classList.add('choice');
       choiceElement.textContent = choice;
@@ -757,10 +780,10 @@ function loadCard() {
       // Add click event for each choice
       choiceElement.addEventListener('click', () => {
         const selectedAnswer = index;
-        if (selectedAnswer === currentCard.answer) {
+        if (selectedAnswer === newCorrectAnswerIndex) {
           answerElement.textContent = "Correct!";
         } else {
-          answerElement.textContent = `Wrong! The correct answer is: ${currentCard.choices[currentCard.answer]}`;
+          answerElement.textContent = `Wrong! The correct answer is: ${shuffledChoices[newCorrectAnswerIndex]}`;
         }
         answerElement.style.display = 'block';
       });
@@ -778,7 +801,7 @@ document.getElementById('jumpToBtn').addEventListener('click', () => {
     currentCardIndex = inputNumber;
     loadCard();
   } else {
-    alert('Please enter a valid question number (1 to 85).');
+    alert('Please enter a valid question number (1 to ' + quizData.length + ').');
   }
 });
 
